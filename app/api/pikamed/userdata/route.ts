@@ -33,8 +33,8 @@ export async function POST(request: NextRequest) {
     })
     const channelData = await channelResponse.json()
 
-    if (!channelData.parent_id || channelData.parent_id !== "1349822688465649736") {
-      return NextResponse.json({ hata: "Bu kanalın bulunduğu kategoride işlem yapılamaz." }, { status: 403 })
+    if (!channelData.parent_id || channelData.parent_id != "1349822688465649736") {
+      return NextResponse.json({ hata: `Bu kanalın bulunduğu kategoride işlem yapılamaz. Kategori id: ${channelData.parent_id} Gerekli İD: 1349822688465649736` }, { status: 403 })
     }
 
     const messagesResponse = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages?limit=1`, {
