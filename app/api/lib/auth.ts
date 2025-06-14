@@ -57,7 +57,7 @@ export async function AuthCheck(request: NextRequest, requiredRole: string): Pro
         timestamp: new Date(),
       }
 
-      await sendMessageToDiscord("İzinsiz Giriş Denemesi", "1367428890271944745", embed)
+      await sendMessageToDiscord("", "1367428890271944745", embed)
       return { error: `Forbidden: You need a role level of ${requiredRoleLevel} or higher`, status: 403 }
     }
 
@@ -76,7 +76,7 @@ export async function AuthCheck(request: NextRequest, requiredRole: string): Pro
       timestamp: new Date(),
     }
 
-    await sendMessageToDiscord("Başarılı Giriş", "1366783878496518316", embed)
+    await sendMessageToDiscord("", "1366783878496518316", embed)
 
     return { user: decodedToken }
   } catch (error) {

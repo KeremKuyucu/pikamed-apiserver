@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       return addCorsHeaders(errorResponse, request.headers.get("origin"))
     }
 
-    const { uid, doctorEmail } = await request.json()
+    const {doctorEmail } = await request.json()
 
     if (!doctorEmail) {
       const errorResponse = NextResponse.json({ error: "Doctor email is required" }, { status: 400 })
