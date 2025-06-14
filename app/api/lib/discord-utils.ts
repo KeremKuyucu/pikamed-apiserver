@@ -1,9 +1,12 @@
 import { writeFile, readFile } from "fs/promises"
-import { getAuth } from "firebase-admin/auth"
+import { firebaseAuth } from "./firebase-admin"
 import path from "path"
 
 export async function sendMessageToDiscord(message: string | null, channelId: string, embed: any) {
-  if (!process.env.BOT_TOKEN) return
+  if (!process.env.BOT_TOKEN) {
+    console.warn("⚠️ BOT_TOKEN bulunamadı, Discord mesajı gönderilemedi")
+    return
+  }
 
   try {
     const response = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages`, {
@@ -19,15 +22,21 @@ export async function sendMessageToDiscord(message: string | null, channelId: st
     })
 
     if (!response.ok) {
-      console.error("Discord API error:", await response.text())
+      const errorText = await response.text()
+      console.error("Discord API error:", errorText)
+    } else {
+      console.log("✅ Discord mesajı başarıyla gönderildi")
     }
   } catch (error) {
-    console.error("Failed to send Discord message:", error)
+    console.error("❌ Discord mesajı gönderilemedi:", error)
   }
 }
 
 export async function sendFileToDiscord(filePath: string, channelId: string) {
-  if (!process.env.BOT_TOKEN) return
+  if (!process.env.BOT_TOKEN) {
+    console.warn("⚠️ BOT_TOKEN bulunamadı, Discord dosyası gönderilemedi")
+    return
+  }
 
   try {
     const fileBuffer = await readFile(filePath)
@@ -45,12 +54,13 @@ export async function sendFileToDiscord(filePath: string, channelId: string) {
     })
 
     if (!response.ok) {
-      console.error("Discord file upload error:", await response.text())
+      const errorText = await response.text()
+      console.error("Discord file upload error:", errorText)
     } else {
-      console.log("Dosya başarıyla gönderildi!")
+      console.log("✅ Dosya Discord'a başarıyla gönderildi!")
     }
   } catch (error) {
-    console.error("Failed to send file to Discord:", error)
+    console.error("❌ Discord dosya gönderimi başarısız:", error)
   }
 }
 
@@ -63,6 +73,10 @@ export async function getFileUrl(channelId: string): Promise<string> {
         Authorization: `Bot ${process.env.BOT_TOKEN}`,
       },
     })
+
+    if (!response.ok) {
+      throw new Error(`Discord API error: ${response.status}`)
+    }
 
     const messages = await response.json()
 
@@ -119,7 +133,7 @@ export async function checkUser(uid: string) {
   }
 
   try {
-    const userRecord = await getAuth().getUser(uid)
+    const userRecord = await firebaseAuth.getUser(uid)
     const userName = userRecord.providerData[0]?.displayName || `User_${uid.substring(0, 5)}`
 
     const DATABASE_PATH = path.join(process.cwd(), "tmp", "pikamed.json")
@@ -129,8 +143,9 @@ export async function checkUser(uid: string) {
       const response = await fetch(fileUrl)
       const arrayBuffer = await response.arrayBuffer()
       await writeFile(DATABASE_PATH, Buffer.from(arrayBuffer))
-      console.log("Dosya başarıyla indirildi:", DATABASE_PATH)
+      console.log("✅ Dosya başarıyla indirildi:", DATABASE_PATH)
     } catch (error) {
+      console.error("❌ Dosya indirilemedi:", error)
       throw new Error("❌ Dosya indirilemedi.")
     }
 
@@ -171,6 +186,7 @@ export async function checkUser(uid: string) {
       }
     }
   } catch (error: any) {
+    console.error("❌ checkUser hatası:", error)
     return {
       success: false,
       message: error.message || "❌ Bilinmeyen bir hata oluştu.",

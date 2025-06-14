@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server"
-import { getAuth } from "firebase-admin/auth"
+import { firebaseAuth } from "./firebase-admin"
 import { sendMessageToDiscord } from "./discord-utils"
 
 interface AuthResult {
@@ -27,11 +27,11 @@ export async function AuthCheck(request: NextRequest, requiredRole: string): Pro
   const idToken = authHeader.split("Bearer ")[1]
 
   try {
-    const decodedToken = await getAuth().verifyIdToken(idToken)
+    const decodedToken = await firebaseAuth.verifyIdToken(idToken)
 
     const userRole = decodedToken.role
     if (!userRole) {
-      await getAuth().setCustomUserClaims(decodedToken.uid, { role: "user" })
+      await firebaseAuth.setCustomUserClaims(decodedToken.uid, { role: "user" })
       decodedToken.role = "user"
       console.log(`Kullanıcı ${decodedToken.uid} için rol 'user' olarak güncellendi.`)
     }

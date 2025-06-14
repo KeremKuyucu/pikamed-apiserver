@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { Shield, Mail, Bot, Users, Database, Zap, Heart, Activity, FileText, Bell, Lock, UserCheck } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function HomePage() {
   const apiCategories = [
@@ -18,6 +19,16 @@ export default function HomePage() {
           description: "Kullanıcı giriş/çıkış işlemlerini Discord'a loglar",
           auth: "Herkese Açık",
           details: "Kullanıcı adı, UID ve profil fotoğrafı ile birlikte giriş/çıkış bilgilerini kaydeder",
+          requestBody: {
+            sebep: "string (Giriş/Çıkış)",
+            uid: "string (Firebase UID)",
+            name: "string (Kullanıcı adı)",
+            profilUrl: "string (Profil fotoğrafı URL'si)",
+          },
+          response: {
+            success: true,
+            message: "Giriş işlemi başarıyla kaydedildi.",
+          },
         },
         {
           method: "POST",
@@ -25,6 +36,20 @@ export default function HomePage() {
           description: "Kullanıcı geri bildirimlerini toplar ve Discord'a gönderir",
           auth: "Kullanıcı",
           details: "Feedback sebepleri, mesajlar ve kullanıcı bilgilerini organize eder",
+          headers: {
+            Authorization: "Bearer <Firebase_ID_Token>",
+          },
+          requestBody: {
+            sebep: "string (Feedback sebebi)",
+            message: "string (Feedback mesajı)",
+            isim: "string (Kullanıcı adı)",
+            eposta: "string (E-posta adresi)",
+            uid: "string (Firebase UID)",
+          },
+          response: {
+            success: true,
+            message: "Mesaj başarıyla gönderildi!",
+          },
         },
       ],
     },
@@ -40,6 +65,29 @@ export default function HomePage() {
           description: "AI endokrinoloji uzmanı ile sohbet",
           auth: "Kullanıcı",
           details: "Hasta bilgileri, insülin planı ve sağlık verilerini analiz ederek profesyonel tavsiyelerde bulunur",
+          headers: {
+            Authorization: "Bearer <Firebase_ID_Token>",
+          },
+          requestBody: {
+            uid: "string (Firebase UID)",
+            message: "string (Hastanın sorusu)",
+            targetWater: "number (Günlük su hedefi ml)",
+            availableWater: "number (İçilen su miktarı ml)",
+            cupSize: "number (Bardak boyutu ml)",
+            changeWaterDay: "string (Su takibi günü)",
+            changeWaterClock: "string (Su takibi saati)",
+            weight: "number (Kilo kg)",
+            size: "number (Boy cm)",
+            bmi: "number (BMI değeri)",
+            bmiCategory: "string (BMI kategorisi)",
+            name: "string (Hasta adı)",
+            selectedLanguage: "string (Dil tercihi)",
+            localTime: "string (Yerel saat)",
+            insulinPlan: "array (İnsülin planı detayları)",
+          },
+          response: {
+            aiResponse: "string (AI'dan gelen profesyonel tavsiye)",
+          },
         },
       ],
     },
@@ -55,6 +103,17 @@ export default function HomePage() {
           description: "Kullanıcıya doktor rolü atar",
           auth: "Admin",
           details: "E-posta adresi ile kullanıcı bulur ve Firebase'de doktor yetkisi verir",
+          headers: {
+            Authorization: "Bearer <Admin_Firebase_ID_Token>",
+          },
+          requestBody: {
+            uid: "string (Admin UID)",
+            doctorEmail: "string (Doktor yapılacak kullanıcının e-postası)",
+          },
+          response: {
+            success: true,
+            message: "Doktor rolü başarıyla atandı!",
+          },
         },
         {
           method: "POST",
@@ -62,6 +121,17 @@ export default function HomePage() {
           description: "Doktor rolünü kaldırır",
           auth: "Admin",
           details: "Mevcut doktor yetkilerini iptal eder ve normal kullanıcı statüsüne döndürür",
+          headers: {
+            Authorization: "Bearer <Admin_Firebase_ID_Token>",
+          },
+          requestBody: {
+            uid: "string (Admin UID)",
+            doctorEmail: "string (Doktor rolü kaldırılacak kullanıcının e-postası)",
+          },
+          response: {
+            success: true,
+            message: "Doktor başarıyla silindi!",
+          },
         },
         {
           method: "GET",
@@ -69,6 +139,18 @@ export default function HomePage() {
           description: "Tüm doktorları listeler",
           auth: "Admin",
           details: "Sistemdeki tüm doktor rolüne sahip kullanıcıları e-posta ve isim bilgileriyle getirir",
+          headers: {
+            Authorization: "Bearer <Admin_Firebase_ID_Token>",
+          },
+          response: {
+            success: true,
+            doctors: [
+              {
+                email: "doktor@example.com",
+                fullName: "Dr. Ahmet Yılmaz",
+              },
+            ],
+          },
         },
         {
           method: "GET",
@@ -76,6 +158,18 @@ export default function HomePage() {
           description: "Tüm adminleri listeler",
           auth: "Admin",
           details: "Admin yetkisine sahip kullanıcıların tam listesini sağlar",
+          headers: {
+            Authorization: "Bearer <Admin_Firebase_ID_Token>",
+          },
+          response: {
+            success: true,
+            admins: [
+              {
+                email: "admin@example.com",
+                fullName: "Admin Kullanıcı",
+              },
+            ],
+          },
         },
         {
           method: "GET",
@@ -83,6 +177,19 @@ export default function HomePage() {
           description: "Tüm kayıtlı kullanıcıları getirir",
           auth: "Doktor",
           details: "Hasta takibi için tüm kullanıcı bilgilerini UID, e-posta ve isim ile listeler",
+          headers: {
+            Authorization: "Bearer <Doctor_Firebase_ID_Token>",
+          },
+          response: {
+            success: true,
+            patients: [
+              {
+                email: "hasta@example.com",
+                displayName: "Hasta Adı",
+                uid: "firebase_uid_123",
+              },
+            ],
+          },
         },
       ],
     },
@@ -98,6 +205,13 @@ export default function HomePage() {
           description: "Discord'dan kullanıcı verilerini çeker",
           auth: "Kullanıcı",
           details: "Kişisel Discord kanalından sağlık verilerini güvenli şekilde indirir",
+          headers: {
+            Authorization: "Bearer <Firebase_ID_Token>",
+          },
+          requestBody: {
+            uid: "string (Firebase UID - veri sahibinin)",
+          },
+          response: "Binary file data (JSON/Excel/PDF formatında sağlık verileri)",
         },
         {
           method: "POST",
@@ -105,6 +219,34 @@ export default function HomePage() {
           description: "Kapsamlı kullanıcı bilgilerini kaydeder",
           auth: "Kullanıcı",
           details: "Su tüketimi, kilo, boy, BMI, insülin planı gibi detaylı sağlık verilerini Discord'a yükler",
+          headers: {
+            Authorization: "Bearer <Firebase_ID_Token>",
+          },
+          requestBody: {
+            message: "string (Ek mesaj)",
+            name: "string (Kullanıcı adı)",
+            uid: "string (Firebase UID)",
+            photoURL: "string (Profil fotoğrafı URL)",
+            version: "string (Uygulama versiyonu)",
+            country: "string (Ülke)",
+            selectedLanguage: "string (Seçilen dil)",
+            targetWater: "number (Günlük su hedefi ml)",
+            availableWater: "number (İçilen su ml)",
+            cupSize: "number (Bardak boyutu ml)",
+            changeWaterClock: "string (Su takibi saati)",
+            changeWaterDay: "string (Su takibi günü)",
+            InsulinListData: "array (İnsülin listesi)",
+            size: "number (Boy cm)",
+            weight: "number (Kilo kg)",
+            changeWeightClock: "string (Kilo takibi saati)",
+            bmiCategory: "string (BMI kategorisi)",
+            bmi: "number (BMI değeri)",
+            notificationRequest: "boolean (Bildirim tercihi)",
+          },
+          response: {
+            success: true,
+            message: "Log mesajı başarıyla kaydedildi!",
+          },
         },
       ],
     },
@@ -120,6 +262,20 @@ export default function HomePage() {
           description: "Toplu e-posta bildirimi gönderir",
           auth: "Admin",
           details: "Belirli kullanıcı gruplarına (tümü, doktorlar, hastalar) veya bireysel olarak e-posta gönderir",
+          headers: {
+            Authorization: "Bearer <Admin_Firebase_ID_Token>",
+          },
+          requestBody: {
+            message: "string (E-posta içeriği HTML formatında)",
+            target: "string (all/doctor/user/specific)",
+            targetId: "string (specific seçilirse hedef UID)",
+            senderUid: "string (Gönderen admin UID)",
+            title: "string (E-posta başlığı)",
+          },
+          response: {
+            success: true,
+            sentCount: "number (Gönderilen e-posta sayısı)",
+          },
         },
         {
           method: "POST",
@@ -127,6 +283,17 @@ export default function HomePage() {
           description: "Hasta verilerine erişim uyarısı",
           auth: "Doktor",
           details: "Doktor hasta verilerine eriştiğinde güvenlik amaçlı otomatik uyarı e-postası gönderir",
+          headers: {
+            Authorization: "Bearer <Doctor_Firebase_ID_Token>",
+          },
+          requestBody: {
+            doktorUid: "string (Doktor UID)",
+            patientUid: "string (Hasta UID)",
+          },
+          response: {
+            success: true,
+            message: "E-posta ve Discord log başarıyla gönderildi!",
+          },
         },
         {
           method: "POST",
@@ -134,6 +301,20 @@ export default function HomePage() {
           description: "Bildirim tercihlerini günceller",
           auth: "Kullanıcı",
           details: "İnsülin hatırlatma zamanları ve bildirim tercihlerini kaydeder",
+          headers: {
+            Authorization: "Bearer <Firebase_ID_Token>",
+          },
+          requestBody: {
+            uid: "string (Firebase UID)",
+            name: "string (Kullanıcı adı)",
+            email: "string (E-posta adresi)",
+            InsulinListData: "array (İnsülin zamanları listesi)",
+            notificationRequest: "boolean (Bildirim almak istiyor mu)",
+          },
+          response: {
+            success: true,
+            message: "Veri başarıyla kaydedildi ve güncellendi!",
+          },
         },
         {
           method: "GET",
@@ -141,6 +322,10 @@ export default function HomePage() {
           description: "E-posta aboneliğinden çıkış",
           auth: "Herkese Açık",
           details: "Kullanıcıların insülin hatırlatma e-postalarından çıkış yapmasını sağlar",
+          queryParams: {
+            uid: "string (Firebase UID)",
+          },
+          response: "HTML sayfası (Abonelik iptal onay sayfası)",
         },
       ],
     },
@@ -156,6 +341,12 @@ export default function HomePage() {
           description: "Süper admin erişim kontrolü",
           auth: "Süper Admin",
           details: "En yüksek seviye yetkilendirme kontrolü",
+          headers: {
+            Authorization: "Bearer <Superadmin_Firebase_ID_Token>",
+          },
+          response: {
+            access: true,
+          },
         },
         {
           method: "GET",
@@ -163,6 +354,12 @@ export default function HomePage() {
           description: "Admin erişim kontrolü",
           auth: "Admin",
           details: "Yönetici seviyesi yetkilendirme doğrulaması",
+          headers: {
+            Authorization: "Bearer <Admin_Firebase_ID_Token>",
+          },
+          response: {
+            access: true,
+          },
         },
         {
           method: "GET",
@@ -170,6 +367,12 @@ export default function HomePage() {
           description: "Doktor erişim kontrolü",
           auth: "Doktor",
           details: "Doktor seviyesi yetkilendirme kontrolü",
+          headers: {
+            Authorization: "Bearer <Doctor_Firebase_ID_Token>",
+          },
+          response: {
+            access: true,
+          },
         },
         {
           method: "GET",
@@ -177,6 +380,12 @@ export default function HomePage() {
           description: "Kullanıcı erişim kontrolü",
           auth: "Kullanıcı",
           details: "Temel kullanıcı yetkilendirme doğrulaması",
+          headers: {
+            Authorization: "Bearer <Firebase_ID_Token>",
+          },
+          response: {
+            access: true,
+          },
         },
       ],
     },
@@ -223,6 +432,7 @@ export default function HomePage() {
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 bg-blue-100 dark:bg-blue-900 px-4 py-2 rounded-full text-blue-800 dark:text-blue-200 text-sm font-medium mb-6">
               <Heart className="h-4 w-4" />
+              Sağlık Teknolojisi API'si
             </div>
             <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">PikaMed API Server</h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
@@ -298,7 +508,68 @@ export default function HomePage() {
                         </Badge>
                       </div>
                       <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{endpoint.description}</h4>
-                      <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">{endpoint.details}</p>
+                      <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-4">
+                        {endpoint.details}
+                      </p>
+
+                      <Tabs defaultValue="request" className="w-full">
+                        <TabsList className="grid w-full grid-cols-2">
+                          <TabsTrigger value="request">Request</TabsTrigger>
+                          <TabsTrigger value="response">Response</TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="request" className="mt-4">
+                          <div className="space-y-3">
+                            {endpoint.headers && (
+                              <div>
+                                <h5 className="font-medium text-sm text-gray-700 dark:text-gray-300 mb-2">Headers:</h5>
+                                <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md text-xs overflow-x-auto">
+                                  {JSON.stringify(endpoint.headers, null, 2)}
+                                </pre>
+                              </div>
+                            )}
+
+                            {endpoint.queryParams && (
+                              <div>
+                                <h5 className="font-medium text-sm text-gray-700 dark:text-gray-300 mb-2">
+                                  Query Parameters:
+                                </h5>
+                                <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md text-xs overflow-x-auto">
+                                  {JSON.stringify(endpoint.queryParams, null, 2)}
+                                </pre>
+                              </div>
+                            )}
+
+                            {endpoint.requestBody && (
+                              <div>
+                                <h5 className="font-medium text-sm text-gray-700 dark:text-gray-300 mb-2">
+                                  Request Body:
+                                </h5>
+                                <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md text-xs overflow-x-auto">
+                                  {JSON.stringify(endpoint.requestBody, null, 2)}
+                                </pre>
+                              </div>
+                            )}
+
+                            {!endpoint.headers && !endpoint.queryParams && !endpoint.requestBody && (
+                              <p className="text-gray-500 dark:text-gray-400 text-sm italic">
+                                Bu endpoint herhangi bir parametre gerektirmez.
+                              </p>
+                            )}
+                          </div>
+                        </TabsContent>
+
+                        <TabsContent value="response" className="mt-4">
+                          <div>
+                            <h5 className="font-medium text-sm text-gray-700 dark:text-gray-300 mb-2">Response:</h5>
+                            <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md text-xs overflow-x-auto">
+                              {typeof endpoint.response === "string"
+                                ? endpoint.response
+                                : JSON.stringify(endpoint.response, null, 2)}
+                            </pre>
+                          </div>
+                        </TabsContent>
+                      </Tabs>
                     </div>
                   ))}
                 </div>

@@ -1,36 +1,14 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { initializeApp, getApps, cert } from "firebase-admin/app"
-import { getAuth } from "firebase-admin/auth"
-
-// Initialize Firebase Admin if not already initialized
-if (!getApps().length) {
-  initializeApp({
-    credential: cert({
-      type: "service_account",
-      project_id: "marul-tarlasii",
-      private_key_id: process.env.PIKAMED_FIREBASE_PRIVATE_KEY_ID,
-      private_key: process.env.PIKAMED_FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-      client_email: process.env.PIKAMED_FIREBASE_CLIENT_EMAIL,
-      client_id: process.env.PIKAMED_FIREBASE_CLIENT_ID,
-      auth_uri: "https://accounts.google.com/o/oauth2/auth",
-      token_uri: "https://oauth2.googleapis.com/token",
-      auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
-      client_x509_cert_url: process.env.PIKAMED_FIREBASE_CLIENT_X509_CERT_URL,
-      universe_domain: "googleapis.com",
-    } as any),
-  })
-}
+import { AuthCheck } from "../../lib/auth"
+import { firebaseAuth } from "../../lib/firebase-admin"
 
 export async function POST(request: NextRequest) {
   try {
     // Auth check
-    const authHeader = request.headers.get("authorization")
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return NextResponse.json({ error: "Unauthorized: No token" }, { status: 401 })
+    const authResult = await AuthCheck(request, "user")
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status })
     }
-
-    const idToken = authHeader.split("Bearer ")[1]
-    const decodedToken = await getAuth().verifyIdToken(idToken)
 
     const {
       uid,
@@ -50,11 +28,11 @@ export async function POST(request: NextRequest) {
       insulinPlan,
     } = await request.json()
 
-    if (uid !== decodedToken.uid) {
+    if (uid !== authResult.user.uid) {
       return NextResponse.json({ error: "UID mismatch" }, { status: 403 })
     }
 
-    const userRecord = await getAuth().getUser(uid)
+    const userRecord = await firebaseAuth.getUser(uid)
 
     const prompt = `
     Sen bir endokrinoloji uzmanı (doktor) rolündesin. Sana mesaj atan kişiler, tip 1 diyabet hastası olan bireylerdir.
@@ -86,6 +64,10 @@ export async function POST(request: NextRequest) {
     <<${message}>>
     `
 
+    if (!process.env.GEMINI_API_KEY) {
+      return NextResponse.json({ error: "Gemini API key not configured" }, { status: 500 })
+    }
+
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
@@ -97,10 +79,16 @@ export async function POST(request: NextRequest) {
       },
     )
 
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error("Gemini API error:", errorText)
+      return NextResponse.json({ error: "Gemini API hatası" }, { status: 500 })
+    }
+
     const data = await response.json()
     const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "Yanıt alınamadı."
 
-    // Log to Discord
+    // Log to Discord (optional, can be removed if not needed)
     const embed = {
       title: "Gemini API Log",
       color: 3447003,
@@ -114,11 +102,11 @@ export async function POST(request: NextRequest) {
       timestamp: new Date(),
     }
 
-    // Send to Discord (implementation would go here)
+    // Send to Discord (implementation would go here if needed)
 
     return NextResponse.json({ aiResponse })
-  } catch (error) {
+  } catch (error: any) {
     console.error("AI API error:", error)
-    return NextResponse.json({ error: "Gemini API hatası" }, { status: 500 })
+    return NextResponse.json({ error: "Gemini API hatası: " + error.message }, { status: 500 })
   }
 }
