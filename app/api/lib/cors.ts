@@ -4,6 +4,10 @@ import { NextResponse } from "next/server"
 const ALLOWED_ORIGINS = [
   "https://pikamed-panel.keremkk.com.tr",
   "https://pikamed.keremkk.com.tr",
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "https://localhost:3000",
+  "https://localhost:3001",
 ]
 
 const CORS_HEADERS = {

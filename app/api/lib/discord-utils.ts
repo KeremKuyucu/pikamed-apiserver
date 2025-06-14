@@ -1,5 +1,5 @@
-import { writeFile, readFile } from "fs/promises"
 import { firebaseAuth } from "./firebase-admin"
+import { getTempDir, safeWriteFile, safeReadFile, safeDeleteFile, createTempFileName } from "./file-utils"
 import path from "path"
 
 export async function sendMessageToDiscord(message: string | null, channelId: string, embed: any) {
@@ -24,11 +24,13 @@ export async function sendMessageToDiscord(message: string | null, channelId: st
     if (!response.ok) {
       const errorText = await response.text()
       console.error("Discord API error:", errorText)
+      throw new Error(`Discord API error: ${response.status}`)
     } else {
       console.log("✅ Discord mesajı başarıyla gönderildi")
     }
   } catch (error) {
     console.error("❌ Discord mesajı gönderilemedi:", error)
+    throw error
   }
 }
 
@@ -39,7 +41,7 @@ export async function sendFileToDiscord(filePath: string, channelId: string) {
   }
 
   try {
-    const fileBuffer = await readFile(filePath)
+    const fileBuffer = await safeReadFile(filePath)
     const formData = new FormData()
 
     const blob = new Blob([fileBuffer], { type: "application/json" })
@@ -56,11 +58,13 @@ export async function sendFileToDiscord(filePath: string, channelId: string) {
     if (!response.ok) {
       const errorText = await response.text()
       console.error("Discord file upload error:", errorText)
+      throw new Error(`Discord file upload error: ${response.status}`)
     } else {
       console.log("✅ Dosya Discord'a başarıyla gönderildi!")
     }
   } catch (error) {
     console.error("❌ Discord dosya gönderimi başarısız:", error)
+    throw error
   }
 }
 
@@ -132,26 +136,36 @@ export async function checkUser(uid: string) {
     throw new Error("❌ UID gereklidir.")
   }
 
+  let tempFilePath: string | null = null
+
   try {
     const userRecord = await firebaseAuth.getUser(uid)
     const userName = userRecord.providerData[0]?.displayName || `User_${uid.substring(0, 5)}`
 
-    const DATABASE_PATH = path.join(process.cwd(), "tmp", "pikamed.json")
+    // Geçici dosya yolu
+    const tempDir = getTempDir()
+    const fileName = createTempFileName("pikamed_db")
+    tempFilePath = path.join(tempDir, fileName)
 
     try {
       const fileUrl = await getFileUrl("1349826932556038327")
       const response = await fetch(fileUrl)
+
+      if (!response.ok) {
+        throw new Error(`Discord dosya indirme hatası: ${response.status}`)
+      }
+
       const arrayBuffer = await response.arrayBuffer()
-      await writeFile(DATABASE_PATH, Buffer.from(arrayBuffer))
-      console.log("✅ Dosya başarıyla indirildi:", DATABASE_PATH)
+      await safeWriteFile(tempFilePath, Buffer.from(arrayBuffer))
+      console.log("✅ Veritabanı dosyası indirildi")
     } catch (error) {
-      console.error("❌ Dosya indirilemedi:", error)
-      throw new Error("❌ Dosya indirilemedi.")
+      console.error("❌ Dosya indirilemedi, yeni veritabanı oluşturuluyor:", error)
+      await safeWriteFile(tempFilePath, JSON.stringify({ users: {} }, null, 2))
     }
 
     let dbContent: string
     try {
-      dbContent = await readFile(DATABASE_PATH, "utf8")
+      dbContent = await safeReadFile(tempFilePath)
     } catch {
       dbContent = '{"users": {}}'
     }
@@ -171,12 +185,16 @@ export async function checkUser(uid: string) {
       }
     } else {
       const newChannelID = await createChannelpikamed(userName)
-      db.users[uid] = { channelID: newChannelID }
+      db.users[uid] = {
+        channelID: newChannelID,
+        createdAt: new Date().toISOString(),
+        userName: userName,
+      }
 
       console.log(`🆕 Yeni kullanıcı eklendi: UID=${uid}, KanalID=${newChannelID}, Kullanıcı Adı=${userName}`)
 
-      await writeFile(DATABASE_PATH, JSON.stringify(db, null, 2))
-      await sendFileToDiscord(DATABASE_PATH, "1349826932556038327")
+      await safeWriteFile(tempFilePath, JSON.stringify(db, null, 2))
+      await sendFileToDiscord(tempFilePath, "1349826932556038327")
 
       return {
         success: true,
@@ -190,6 +208,11 @@ export async function checkUser(uid: string) {
     return {
       success: false,
       message: error.message || "❌ Bilinmeyen bir hata oluştu.",
+    }
+  } finally {
+    // Cleanup
+    if (tempFilePath) {
+      await safeDeleteFile(tempFilePath)
     }
   }
 }
