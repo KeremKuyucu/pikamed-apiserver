@@ -1,21 +1,30 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { withAuth, type AuthenticatedRequest } from "@/lib/auth-middleware"
+import { adminAuth } from "@/lib/firebase-admin"
 
 async function handler(request: AuthenticatedRequest) {
   try {
-    // Gerçek implementasyonda Firebase'den kullanıcıları çeker
-    const mockUsers = [
-      { email: "patient1@example.com", displayName: "Patient One", uid: "user1" },
-      { email: "patient2@example.com", displayName: "Patient Two", uid: "user2" },
-      { email: "patient3@example.com", displayName: "Patient Three", uid: "user3" },
-    ]
+    // Firebase Authentication kullanıcılarını listele
+    const listUsersResult = await adminAuth.listUsers()
+    const users = listUsersResult.users.map((user) => ({
+      email: user.email,
+      displayName: user.providerData[0]?.displayName,
+      uid: user.uid,
+    }))
 
     return NextResponse.json({
       success: true,
-      patients: mockUsers,
+      patients: users,
     })
   } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 })
+    console.error("Get users error:", error)
+    return NextResponse.json(
+      {
+        success: false,
+        message: `Hata: ${error}`,
+      },
+      { status: 500 },
+    )
   }
 }
 
