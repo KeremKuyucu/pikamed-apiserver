@@ -1,143 +1,261 @@
-import type React from "react"
-import Link from "next/link"
-import { ArrowRight, Shield, Stethoscope, User, MessageSquare, Bell, Database } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
+import { Shield, Mail, Bot, Calendar, Users, Database, Zap } from "lucide-react"
 
-export default function Home() {
+export default function HomePage() {
+  const apiEndpoints = [
+    {
+      category: "Authentication & Logging",
+      icon: <Shield className="h-5 w-5" />,
+      endpoints: [
+        { method: "POST", path: "/api/pikamed/authlog", description: "User login/logout logging", auth: "None" },
+        { method: "POST", path: "/api/pikamed/pikamedfeedback", description: "User feedback submission", auth: "User" },
+      ],
+    },
+    {
+      category: "AI Integration",
+      icon: <Bot className="h-5 w-5" />,
+      endpoints: [
+        { method: "POST", path: "/api/pikamed/ai", description: "AI consultation with Gemini API", auth: "User" },
+      ],
+    },
+    {
+      category: "User Management",
+      icon: <Users className="h-5 w-5" />,
+      endpoints: [
+        { method: "POST", path: "/api/pikamed/add-doctor", description: "Add doctor role to user", auth: "Admin" },
+        {
+          method: "POST",
+          path: "/api/pikamed/delete-doctor",
+          description: "Remove doctor role from user",
+          auth: "Admin",
+        },
+        { method: "GET", path: "/api/pikamed/get-doctors", description: "Get all doctors", auth: "Admin" },
+        { method: "GET", path: "/api/pikamed/get-admins", description: "Get all admins", auth: "Admin" },
+        { method: "GET", path: "/api/pikamed/get-users", description: "Get all users", auth: "Doctor" },
+      ],
+    },
+    {
+      category: "Data Management",
+      icon: <Database className="h-5 w-5" />,
+      endpoints: [
+        { method: "POST", path: "/api/pikamed/userdata", description: "Get user data from Discord", auth: "User" },
+        { method: "POST", path: "/api/pikamed/info", description: "Submit user information", auth: "User" },
+      ],
+    },
+    {
+      category: "Email & Notifications",
+      icon: <Mail className="h-5 w-5" />,
+      endpoints: [
+        {
+          method: "POST",
+          path: "/api/pikamed/send-notification",
+          description: "Send email notifications",
+          auth: "Admin",
+        },
+        {
+          method: "POST",
+          path: "/api/pikamed/send-warning",
+          description: "Send patient access warning",
+          auth: "Doctor",
+        },
+        {
+          method: "POST",
+          path: "/api/pikamed/notificationInfo",
+          description: "Update notification preferences",
+          auth: "User",
+        },
+        {
+          method: "GET",
+          path: "/api/pikamed/unsubscribe",
+          description: "Unsubscribe from notifications",
+          auth: "None",
+        },
+      ],
+    },
+    {
+      category: "Access Control",
+      icon: <Zap className="h-5 w-5" />,
+      endpoints: [
+        {
+          method: "GET",
+          path: "/api/pikamed/superadmin-access",
+          description: "Superadmin access check",
+          auth: "Superadmin",
+        },
+        { method: "GET", path: "/api/pikamed/admin-access", description: "Admin access check", auth: "Admin" },
+        { method: "GET", path: "/api/pikamed/doctor-access", description: "Doctor access check", auth: "Doctor" },
+        { method: "GET", path: "/api/pikamed/user-access", description: "User access check", auth: "User" },
+      ],
+    },
+    {
+      category: "Game API",
+      icon: <Calendar className="h-5 w-5" />,
+      endpoints: [{ method: "GET", path: "/api/geogame/*", description: "Geography game endpoints", auth: "Varies" }],
+    },
+  ]
+
+  const getMethodColor = (method: string) => {
+    switch (method) {
+      case "GET":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+      case "POST":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+      case "PUT":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+      case "DELETE":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
+    }
+  }
+
+  const getAuthColor = (auth: string) => {
+    switch (auth) {
+      case "None":
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
+      case "User":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+      case "Doctor":
+        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300"
+      case "Admin":
+        return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300"
+      case "Superadmin":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
+    }
+  }
+
   return (
-    <div className="flex flex-col min-h-screen">
-      <header className="bg-gradient-to-r from-purple-700 to-purple-900 py-12 px-4 md:px-6">
-        <div className="container mx-auto">
-          <div className="flex flex-col items-center text-center">
-            <h1 className="text-3xl md:text-5xl font-bold text-white mb-4">PikaMed API</h1>
-            <p className="text-lg text-purple-100 max-w-2xl mb-8">
-              A comprehensive healthcare API for diabetes management with insulin tracking, notifications, and
-              doctor-patient communication
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button asChild size="lg" className="bg-white text-purple-900 hover:bg-purple-100">
-                <Link href="/docs">
-                  API Documentation
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-                <Link href="/test">
-                  Test API
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">PikaMed API Server</h1>
+          <p className="text-xl text-gray-600 dark:text-gray-300 mb-6">
+            Comprehensive medical application API with AI integration, user management, and notification system
+          </p>
+          <div className="flex justify-center space-x-4">
+            <Badge variant="secondary" className="px-3 py-1">
+              <Bot className="h-4 w-4 mr-1" />
+              AI Powered
+            </Badge>
+            <Badge variant="secondary" className="px-3 py-1">
+              <Shield className="h-4 w-4 mr-1" />
+              Secure Authentication
+            </Badge>
+            <Badge variant="secondary" className="px-3 py-1">
+              <Mail className="h-4 w-4 mr-1" />
+              Email Notifications
+            </Badge>
           </div>
         </div>
-      </header>
 
-      <main className="flex-1 py-12 px-4 md:px-6 bg-gray-50">
-        <div className="container mx-auto">
-          <section className="mb-16">
-            <h2 className="text-3xl font-bold mb-8 text-center">Key Features</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <FeatureCard
-                icon={<Shield className="h-10 w-10 text-purple-600" />}
-                title="Role-Based Authentication"
-                description="Secure endpoints with different access levels for superadmins, admins, doctors, and patients"
-              />
-              <FeatureCard
-                icon={<Stethoscope className="h-10 w-10 text-purple-600" />}
-                title="Doctor-Patient Management"
-                description="Assign doctors to patients and manage healthcare relationships securely"
-              />
-              <FeatureCard
-                icon={<MessageSquare className="h-10 w-10 text-purple-600" />}
-                title="AI Integration"
-                description="Gemini API integration for intelligent responses to patient queries about diabetes management"
-              />
-              <FeatureCard
-                icon={<Bell className="h-10 w-10 text-purple-600" />}
-                title="Notification System"
-                description="Email notifications for insulin reminders with customizable schedules"
-              />
-              <FeatureCard
-                icon={<Database className="h-10 w-10 text-purple-600" />}
-                title="Data Management"
-                description="Store and retrieve patient data including insulin plans, water intake, and health metrics"
-              />
-              <FeatureCard
-                icon={<User className="h-10 w-10 text-purple-600" />}
-                title="User Management"
-                description="Comprehensive user management with role assignment and access control"
-              />
-            </div>
-          </section>
+        <div className="grid gap-8">
+          {apiEndpoints.map((category, index) => (
+            <Card key={index} className="shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-2xl">
+                  {category.icon}
+                  {category.category}
+                </CardTitle>
+                <CardDescription>API endpoints for {category.category.toLowerCase()}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {category.endpoints.map((endpoint, endpointIndex) => (
+                    <div
+                      key={endpointIndex}
+                      className="border rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                          <Badge className={getMethodColor(endpoint.method)}>{endpoint.method}</Badge>
+                          <code className="text-sm font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                            {endpoint.path}
+                          </code>
+                        </div>
+                        <Badge className={getAuthColor(endpoint.auth)}>{endpoint.auth}</Badge>
+                      </div>
+                      <p className="text-gray-600 dark:text-gray-300 text-sm">{endpoint.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
-          <section className="mb-16">
-            <h2 className="text-3xl font-bold mb-8 text-center">Getting Started</h2>
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="text-xl font-semibold mb-4">Authentication</h3>
-              <p className="mb-4">All API requests require a valid Firebase authentication token:</p>
-              <pre className="bg-gray-100 p-4 rounded-md overflow-x-auto mb-6">
-                <code>
-                  {`// Example request with authentication
-fetch('https://api.pikamed.com/user-access', {
-  headers: {
-    'Authorization': 'Bearer YOUR_FIREBASE_ID_TOKEN'
-  }
-})`}
-                </code>
-              </pre>
+        <Separator className="my-12" />
 
-              <h3 className="text-xl font-semibold mb-4">Basic Endpoints</h3>
-              <ul className="list-disc pl-6 space-y-2 mb-6">
-                <li>
-                  <code>/user-access</code> - Check if user has basic access
+        <div className="grid md:grid-cols-2 gap-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Features</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-green-500" />
+                  Firebase Authentication & Authorization
                 </li>
-                <li>
-                  <code>/doctor-access</code> - Check if user has doctor privileges
+                <li className="flex items-center gap-2">
+                  <Bot className="h-4 w-4 text-blue-500" />
+                  AI Integration with Google Gemini
                 </li>
-                <li>
-                  <code>/admin-access</code> - Check if user has admin privileges
+                <li className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-purple-500" />
+                  Email Notifications via Mailjet
                 </li>
-                <li>
-                  <code>/info</code> - Submit user health information
+                <li className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-orange-500" />
+                  Automated Insulin Reminders
                 </li>
-                <li>
-                  <code>/ai</code> - Get AI-powered responses for diabetes management
+                <li className="flex items-center gap-2">
+                  <Database className="h-4 w-4 text-indigo-500" />
+                  Discord Integration for Logging
                 </li>
               </ul>
+            </CardContent>
+          </Card>
 
-              <div className="flex justify-center">
-                <Button asChild>
-                  <Link href="/docs">
-                    View Full Documentation
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
+          <Card>
+            <CardHeader>
+              <CardTitle>Authentication Levels</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">None</span>
+                  <Badge className={getAuthColor("None")}>Public Access</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">User</span>
+                  <Badge className={getAuthColor("User")}>Level 0</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Doctor</span>
+                  <Badge className={getAuthColor("Doctor")}>Level 1</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Admin</span>
+                  <Badge className={getAuthColor("Admin")}>Level 3</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Superadmin</span>
+                  <Badge className={getAuthColor("Superadmin")}>Level 5</Badge>
+                </div>
               </div>
-            </div>
-          </section>
+            </CardContent>
+          </Card>
         </div>
-      </main>
 
-      <footer className="bg-gray-900 text-white py-8 px-4 md:px-6">
-        <div className="container mx-auto text-center">
-          <p>© 2025 PikaMed API. All rights reserved.</p>
+        <div className="text-center mt-12 text-gray-500 dark:text-gray-400">
+          <p>Server is running and all APIs are active</p>
+          <p className="text-sm mt-2">Built with Next.js • Deployed on Vercel</p>
         </div>
-      </footer>
+      </div>
     </div>
-  )
-}
-
-function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center gap-4">
-        {icon}
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <CardDescription className="text-base">{description}</CardDescription>
-      </CardContent>
-    </Card>
   )
 }
