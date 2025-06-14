@@ -17,7 +17,14 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="tr">
+      <head>
+        <link
+          rel="icon"
+          type="image/x-icon"
+          href="https://raw.github.com/KeremKuyucu/PikaMed/main/assets/logo.png"
+        />
+      </head>
       <body className={inter.className}>{children}</body>
     </html>
   )

@@ -95,11 +95,9 @@ export async function POST(request: NextRequest) {
         },
         { name: "🌍 Ülke", value: country || "Bilinmiyor", inline: true },
         { name: "📊 Sürüm", value: version || "Bilinmiyor", inline: true },
-        { name: "⚖️ BMI", value: `${bmi || "N/A"} (${bmiCategory || "N/A"})`, inline: true },
-        { name: "💧 Su Tüketimi", value: `${availableWater || 0}/${targetWater || 0} ml`, inline: true },
       ],
       thumbnail: {
-        url: photoURL || "https://cdn.glitch.global/e74d89f5-045d-4ad2-94c7-e2c99ed95318/2815428.png?v=1738114346363",
+        url: photoURL || "https://raw.githubusercontent.com/KeremKuyucu/PikaMed/main/assets/custom_profile.png",
       },
       timestamp: new Date(),
     }

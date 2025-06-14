@@ -430,10 +430,6 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10"></div>
         <div className="container mx-auto px-4 py-16 relative">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 bg-blue-100 dark:bg-blue-900 px-4 py-2 rounded-full text-blue-800 dark:text-blue-200 text-sm font-medium mb-6">
-              <Heart className="h-4 w-4" />
-              Sağlık Teknolojisi API'si
-            </div>
             <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">PikaMed API Server</h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
               Tip 1 diyabet hastaları için geliştirilmiş kapsamlı sağlık yönetim sistemi. Yapay zeka destekli

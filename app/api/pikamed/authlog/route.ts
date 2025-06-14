@@ -20,7 +20,6 @@ export async function POST(request: NextRequest) {
       },
       footer: {
         text: "PikaMed Giriş/Çıkış Logu",
-        icon_url: "https://cdn.glitch.global/e74d89f5-045d-4ad2-94c7-e2c99ed95318/logo.jpg?v=1737331226085",
       },
       timestamp: new Date(),
     }
