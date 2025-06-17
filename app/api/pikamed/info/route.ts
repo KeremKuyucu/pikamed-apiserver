@@ -4,6 +4,7 @@ import { checkUser, sendFileToDiscord, sendMessageToDiscord } from "../../lib/di
 import { handleCors, addCorsHeaders } from "../../lib/cors"
 import { getTempDir, safeWriteFile, safeDeleteFile, createTempFileName } from "../../lib/file-utils"
 import path from "path"
+import { sendAnalyticsEvent } from "../../lib/analytics-service";
 
 export async function OPTIONS(request: NextRequest) {
   return handleCors(request) || new NextResponse(null, { status: 200 })
@@ -22,52 +23,27 @@ export async function POST(request: NextRequest) {
       return addCorsHeaders(errorResponse, request.headers.get("origin"))
     }
 
+    const body = await request.json();
     const {
-      message,
-      name,
-      uid,
-      photoURL,
-      version,
-      country,
-      selectedLanguage,
-      targetWater,
-      availableWater,
-      cupSize,
-      changeWaterClock,
-      changeWaterDay,
-      InsulinListData,
-      size,
-      weight,
-      changeWeightClock,
-      bmiCategory,
-      bmi,
-      notificationRequest,
-    } = await request.json()
+      message, name, uid, photoURL, version, country,
+      selectedLanguage, targetWater, availableWater, cupSize,
+      changeWaterClock, changeWaterDay, InsulinListData, size,
+      weight, changeWeightClock, bmiCategory, bmi, notificationRequest,
+    } = body;
+    
+    sendAnalyticsEvent({
+      userId: uid,
+      eventEndpoint: "/api/info/log" // Bu endpoint'in amacını belirten bir isim
+    });
 
     const userToken = authResult.user
 
     const logData = {
-      name,
-      uid,
-      photoURL,
-      selectedLanguage,
-      targetWater,
-      availableWater,
-      cupSize,
-      changeWaterClock,
-      changeWaterDay,
-      InsulinListData,
-      size,
-      weight,
-      changeWeightClock,
-      bmiCategory,
-      bmi,
-      notificationRequest,
-      timestamp: new Date().toISOString(),
-      version,
-      country,
-      message,
-    }
+      name, uid, photoURL, selectedLanguage, targetWater, availableWater,
+      cupSize, changeWaterClock, changeWaterDay, InsulinListData, size,
+      weight, changeWeightClock, bmiCategory, bmi, notificationRequest,
+      timestamp: new Date().toISOString(), version, country, message,
+    };
 
     // Geçici dosya oluştur
     const tempDir = getTempDir()
@@ -116,6 +92,7 @@ export async function POST(request: NextRequest) {
         success: true,
         message: "Log mesajı başarıyla kaydedildi ve gönderildi!",
       })
+    
       return addCorsHeaders(response, request.headers.get("origin"))
     } catch (fileError: any) {
       console.error("❌ Dosya gönderimi başarısız, sadece embed gönderiliyor:", fileError)
