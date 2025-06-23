@@ -10,17 +10,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: authResult.error }, { status: authResult.status })
     }
 
-    const { message, target, targetId, senderUid, title } = await request.json()
+    // `targetId` yerine `targetEmail` de destructure ediyoruz
+    const { message, target, targetId, targetEmail, senderUid, title } = await request.json()
 
-    if (!message || !target || !senderUid || !title) {
-      return NextResponse.json({ error: "Eksik alanlar mevcut" }, { status: 400 })
+    // `targetEmail` hedef "external" olduğunda zorunlu olmalı
+    if (!message || !target || !senderUid || !title || (target === "external" && !targetEmail)) {
+      return NextResponse.json({ error: "Eksik alanlar mevcut veya hedef e-posta boş." }, { status: 400 })
     }
 
-    console.log("📧 E-posta bildirimi başlatıldı:", { message, title, target, targetId })
+    console.log("📧 E-posta bildirimi başlatıldı:", { message, title, target, targetId, targetEmail })
 
     let recipients: any[] = []
 
-    if (target === "all" || target === "doctor" || target === "user") {
+    if (target === "all" || target === "doctors" || target === "patients") { // 'user' yerine 'patients' kullanıldı
       const allUsers: any[] = []
       let pageToken: string | undefined
 
@@ -33,15 +35,26 @@ export async function POST(request: NextRequest) {
 
       if (target === "all") {
         recipients = allUsers
-      } else {
-        recipients = allUsers.filter((u) => u.customClaims?.role === target)
+      } else if (target === "doctors") {
+        recipients = allUsers.filter((u) => u.customClaims?.role === "doctor")
+      } else if (target === "patients") {
+        // 'patients' rolüne sahip olmayan veya özel bir rolü olmayan tüm kullanıcılar
+        recipients = allUsers.filter((u) => !u.customClaims?.role || (u.customClaims?.role !== "doctor" && u.customClaims?.role !== "admin"))
       }
     } else if (target === "specific") {
+      if (!targetId) {
+        return NextResponse.json({ error: "Belirli bir hasta hedefi için targetId gereklidir." }, { status: 400 });
+      }
       const user = await getAuth().getUser(targetId)
       if (!user.email) {
         return NextResponse.json({ error: "Kullanıcının e-posta adresi bulunamadı." }, { status: 404 })
       }
       recipients = [user]
+    } else if (target === "external") { // Yeni 'external' hedef tipi
+      if (!targetEmail) {
+        return NextResponse.json({ error: "Harici e-posta hedefi için targetEmail gereklidir." }, { status: 400 });
+      }
+      recipients = [{ email: targetEmail }] // Sadece e-posta adresi içeren bir obje oluşturuyoruz
     } else {
       return NextResponse.json({ error: "Geçersiz hedef tipi." }, { status: 400 })
     }
