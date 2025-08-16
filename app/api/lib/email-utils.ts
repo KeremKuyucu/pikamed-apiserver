@@ -8,7 +8,7 @@ export async function sendEmail(to: string, subject: string, htmlContent: string
       Messages: [
         {
           From: {
-            Email: "pikamed@geogame.can.re",
+            Email: "pikamed@keremkk.com.tr",
             Name: "PikaMed",
           },
           To: [
